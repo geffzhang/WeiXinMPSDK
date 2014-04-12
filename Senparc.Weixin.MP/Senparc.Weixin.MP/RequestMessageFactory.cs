@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 namespace Senparc.Weixin.MP
 {
@@ -47,9 +49,14 @@ namespace Senparc.Weixin.MP
                     case RequestMsgType.Voice:
                         requestMessage = new RequestMessageVoice();
                         break;
+                    case RequestMsgType.Video:
+                        requestMessage = new RequestMessageVideo();
+                        break;
+                    case RequestMsgType.Link:
+                        requestMessage = new RequestMessageLink();
+                        break;
                     case RequestMsgType.Event:
-
-                        //判断类型
+                        //判断Event类型
                         switch (doc.Root.Element("Event").Value.ToUpper())
                         {
                             case "ENTER"://进入会话
@@ -63,6 +70,15 @@ namespace Senparc.Weixin.MP
                                 break;
                             case "UNSUBSCRIBE"://取消订阅（关注）
                                 requestMessage = new RequestMessageEvent_Unsubscribe();
+                                break;
+                            case "CLICK"://菜单点击
+                                requestMessage = new RequestMessageEvent_Click();
+                                break;
+                            case "SCAN"://二维码扫描
+                                requestMessage = new RequestMessageEvent_Scan();
+                                break;
+                            case "VIEW"://URL跳转
+                                requestMessage = new RequestMessageEvent_View();
                                 break;
                             default://其他意外类型（也可以选择抛出异常）
                                 requestMessage = new RequestMessageEventBase();
@@ -90,6 +106,22 @@ namespace Senparc.Weixin.MP
         public static IRequestMessageBase GetRequestEntity(string xml)
         {
             return GetRequestEntity(XDocument.Parse(xml));
+        }
+
+
+        /// <summary>
+        /// 获取XDocument转换后的IRequestMessageBase实例。
+        /// 如果MsgType不存在，抛出UnknownRequestMsgTypeException异常
+        /// </summary>
+        /// <param name="stream">如Request.InputStream</param>
+        /// <returns></returns>
+        public static IRequestMessageBase GetRequestEntity(Stream stream)
+        {
+            using (XmlReader xr = XmlReader.Create(stream))
+            {
+                var doc = XDocument.Load(xr);
+                return GetRequestEntity(doc);
+            }
         }
     }
 }

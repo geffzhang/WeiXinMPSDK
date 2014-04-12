@@ -1,6 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 using Senparc.Weixin.MP.Entities;
@@ -15,7 +17,7 @@ namespace Senparc.Weixin.MP.Helpers
         /// <typeparam name="T">MessageBase为基类的类型，Response和Request都可以</typeparam>
         /// <param name="entity">实体</param>
         /// <param name="doc">XML</param>
-        public static void FillEntityWithXml<T>(T entity, XDocument doc) where T : /*MessageBase*/ class, new()
+        public static void FillEntityWithXml<T>(this T entity, XDocument doc) where T : /*MessageBase*/ class, new()
         {
             entity = entity ?? new T();
             var root = doc.Root;
@@ -54,34 +56,52 @@ namespace Senparc.Weixin.MP.Helpers
                             break;
                         //以下为枚举类型
                         case "RequestMsgType":
-                            prop.SetValue(entity, MsgTypeHelper.GetRequestMsgType(root.Element(propName).Value), null);
+                            //已设为只读
+                            //prop.SetValue(entity, MsgTypeHelper.GetRequestMsgType(root.Element(propName).Value), null);
                             break;
                         case "ResponseMsgType"://Response适用
-                            prop.SetValue(entity, MsgTypeHelper.GetResponseMsgType(root.Element(propName).Value), null);
+                            //已设为只读
+                            //prop.SetValue(entity, MsgTypeHelper.GetResponseMsgType(root.Element(propName).Value), null);
                             break;
                         case "Event":
-                            prop.SetValue(entity, EventHelper.GetEventType(root.Element(propName).Value), null);
+                            //已设为只读
+                            //prop.SetValue(entity, EventHelper.GetEventType(root.Element(propName).Value), null);
                             break;
                         //以下为实体类型
                         case "List`1"://List<T>类型，ResponseMessageNews适用
                             var genericArguments = prop.PropertyType.GetGenericArguments();
-                            if (genericArguments[0].Name == "Article")//Response适用
+                            if (genericArguments[0].Name == "Article")//ResponseMessageNews适用
                             {
                                 //文章下属节点item
-                                List<Article> articles=new List<Article>();
+                                List<Article> articles = new List<Article>();
                                 foreach (var item in root.Element(propName).Elements("item"))
                                 {
                                     var article = new Article();
-                                    FillEntityWithXml(article,new XDocument(item));
+                                    FillEntityWithXml(article, new XDocument(item));
                                     articles.Add(article);
                                 }
-                                prop.SetValue(entity, articles,null);
+                                prop.SetValue(entity, articles, null);
                             }
                             break;
                         case "Music"://ResponseMessageMusic适用
-                            Music music=new Music();
+                            Music music = new Music();
                             FillEntityWithXml(music, new XDocument(root.Element(propName)));
                             prop.SetValue(entity, music, null);
+                            break;
+                        case "Image"://ResponseMessageImage适用
+                            Image image = new Image();
+                            FillEntityWithXml(image, new XDocument(root.Element(propName)));
+                            prop.SetValue(entity, image, null);
+                            break;
+                        case "Voice"://ResponseMessageVoice适用
+                            Voice voice = new Voice();
+                            FillEntityWithXml(voice, new XDocument(root.Element(propName)));
+                            prop.SetValue(entity, voice, null);
+                            break;
+                        case "Video"://ResponseMessageVideo适用
+                            Video video = new Video();
+                            FillEntityWithXml(video, new XDocument(root.Element(propName)));
+                            prop.SetValue(entity, video, null);
                             break;
                         default:
                             prop.SetValue(entity, root.Element(propName).Value, null);
@@ -94,10 +114,10 @@ namespace Senparc.Weixin.MP.Helpers
         /// <summary>
         /// 将实体转为XML
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="entity"></param>
+        /// <typeparam name="T">RequestMessage或ResponseMessage</typeparam>
+        /// <param name="entity">实体</param>
         /// <returns></returns>
-        public static XDocument ConvertEntityToXml<T>(T entity) where T : class , new()
+        public static XDocument ConvertEntityToXml<T>(this T entity) where T : class , new()
         {
             entity = entity ?? new T();
             var doc = new XDocument();
@@ -107,20 +127,32 @@ namespace Senparc.Weixin.MP.Helpers
             /* 注意！
              * 经过测试，微信对字段排序有严格要求，这里对排序进行强制约束
             */
-            var propNameOrder = new List<string>();
+            var propNameOrder = new List<string>() { "ToUserName", "FromUserName", "CreateTime", "MsgType" };
             //不同返回类型需要对应不同特殊格式的排序
-            if (typeof(T) == typeof(ResponseMessageNews))
+            if (entity is ResponseMessageNews)
             {
-                propNameOrder.AddRange(new[] { "ToUserName", "FromUserName", "CreateTime", "MsgType", "Content", "ArticleCount", "Articles", "FuncFlag",/*以下是Atricle属性*/ "Title ", "Description ", "PicUrl", "Url" });
+                propNameOrder.AddRange(new[] { "ArticleCount", "Articles", "FuncFlag",/*以下是Atricle属性*/ "Title ", "Description ", "PicUrl", "Url" });
             }
-            else if (typeof(T) == typeof(ResponseMessageMusic))
+            else if (entity is ResponseMessageMusic)
             {
-                propNameOrder.AddRange(new[] { "ToUserName", "FromUserName", "CreateTime", "MsgType", "Music", "FuncFlag",/*以下是Music属性*/ "Title ", "Description ", "MusicUrl", "HQMusicUrl" });
+                propNameOrder.AddRange(new[] { "Music", "FuncFlag", "ThumbMediaId",/*以下是Music属性*/ "Title ", "Description ", "MusicUrl", "HQMusicUrl" });
+            }
+            else if (entity is ResponseMessageImage)
+            {
+                propNameOrder.AddRange(new[] { "Image",/*以下是Image属性*/ "MediaId " });
+            }
+            else if (entity is ResponseMessageVoice)
+            {
+                propNameOrder.AddRange(new[] { "Voice",/*以下是Voice属性*/ "MediaId " });
+            }
+            else if (entity is ResponseMessageVideo)
+            {
+                propNameOrder.AddRange(new[] { "Video",/*以下是Video属性*/ "MediaId ", "Title", "Description" });
             }
             else
             {
                 //如Text类型
-                propNameOrder.AddRange(new[] { "ToUserName", "FromUserName", "CreateTime", "MsgType", "Content", "FuncFlag" });
+                propNameOrder.AddRange(new[] { "Content", "FuncFlag" });
             }
 
             Func<string, int> orderByPropName = propNameOrder.IndexOf;
@@ -141,12 +173,12 @@ namespace Senparc.Weixin.MP.Helpers
                     }
                     root.Add(atriclesElement);
                 }
-                else if (propName == "Music")
+                else if (propName == "Music" || propName == "Image" || propName == "Video" || propName == "Voice")
                 {
-                    //音乐格式
-                    var musicElement = new XElement("Music");
-                    var music = prop.GetValue(entity, null) as Music;
-                    var subNodes = ConvertEntityToXml(music).Root.Elements();
+                    //音乐、图片、视频、语音格式
+                    var musicElement = new XElement(propName);
+                    var media = prop.GetValue(entity, null);// as Music;
+                    var subNodes = ConvertEntityToXml(media).Root.Elements();
                     musicElement.Add(subNodes);
                     root.Add(musicElement);
                 }
@@ -172,7 +204,7 @@ namespace Senparc.Weixin.MP.Helpers
                             }
                             break;
                         case "ResponseMsgType":
-                            root.Add(new XElement(propName, prop.GetValue(entity, null).ToString().ToLower()));
+                            root.Add(new XElement(propName, new XCData(prop.GetValue(entity, null).ToString().ToLower())));
                             break;
                         case "Article":
                             root.Add(new XElement(propName, prop.GetValue(entity, null).ToString().ToLower()));
@@ -184,6 +216,38 @@ namespace Senparc.Weixin.MP.Helpers
                 }
             }
             return doc;
+        }
+
+        /// <summary>
+        /// 将实体转为XML字符串
+        /// </summary>
+        /// <typeparam name="T">RequestMessage或ResponseMessage</typeparam>
+        /// <param name="entity">实体</param>
+        /// <returns></returns>
+        public static string ConvertEntityToXmlString<T>(this T entity) where T : class , new()
+        {
+            return entity.ConvertEntityToXml().ToString();
+        }
+
+        /// <summary>
+        /// ResponseMessageBase.CreateFromRequestMessage<T>(requestMessage)的扩展方法
+        /// </summary>
+        /// <typeparam name="T">需要生成的ResponseMessage类型</typeparam>
+        /// <param name="requestMessage">IRequestMessageBase接口下的接收信息类型</param>
+        /// <returns></returns>
+        public static T CreateResponseMessage<T>(this IRequestMessageBase requestMessage) where T : ResponseMessageBase
+        {
+            return ResponseMessageBase.CreateFromRequestMessage<T>(requestMessage);
+        }
+
+        /// <summary>
+        /// ResponseMessageBase.CreateFromResponseXml(xml)的扩展方法
+        /// </summary>
+        /// <param name="xml">返回给服务器的Response Xml</param>
+        /// <returns></returns>
+        public static IResponseMessageBase CreateResponseMessage(this string xml)
+        {
+            return ResponseMessageBase.CreateFromResponseXml(xml);
         }
     }
 }

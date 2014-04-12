@@ -14,7 +14,9 @@ namespace Senparc.Weixin.MP
         Location, //地理位置
         Image, //图片
         Voice, //语音
-        Event //事件推送
+        Video, //视频
+        Link, //连接信息
+        Event, //事件推送
     }
 
     /// <summary>
@@ -45,7 +47,17 @@ namespace Senparc.Weixin.MP
         /// <summary>
         /// 自定义菜单点击事件
         /// </summary>
-        CLICK
+        CLICK,
+
+        /// <summary>
+        /// 二维码扫描
+        /// </summary>
+        scan,
+
+        /// <summary>
+        /// URL跳转
+        /// </summary>
+        VIEW
     }
 
 
@@ -56,7 +68,10 @@ namespace Senparc.Weixin.MP
     {
         Text,
         News,
-        Music
+        Music,
+        Image,
+        Voice,
+        Video
     }
 
     /// <summary>
@@ -64,8 +79,37 @@ namespace Senparc.Weixin.MP
     /// </summary>
     public enum ButtonType
     {
+        /// <summary>
+        /// 点击
+        /// </summary>
         click,
+        /// <summary>
+        /// Url
+        /// </summary>
         view
+    }
+
+    /// <summary>
+    /// 上传媒体文件类型
+    /// </summary>
+    public enum UploadMediaFileType
+    {
+        /// <summary>
+        /// 图片: 128K，支持JPG格式
+        /// </summary>
+        image,
+        /// <summary>
+        /// 语音：256K，播放长度不超过60s，支持AMR\MP3格式
+        /// </summary>
+        voice,
+        /// <summary>
+        /// 视频：1MB，支持MP4格式
+        /// </summary>
+        video,
+        /// <summary>
+        /// thumb：64KB，支持JPG格式
+        /// </summary>
+        thumb
     }
 
     /// <summary>
@@ -133,6 +177,33 @@ namespace Senparc.Weixin.MP
         不存在媒体数据 = 46001,
         不存在的菜单版本 = 46002,
         不存在的菜单数据 = 46003,
-        解析JSON_XML内容错误 = 47001
+        解析JSON_XML内容错误 = 47001,
+        api功能未授权 = 48001,
+        用户未授权该api = 50001,
+
+        //新加入的一些类型，以下文字根据P2P项目格式组织，非官方文字
+        发送消息失败_48小时内用户未互动 = 10706,
+        发送消息失败_该用户已被加入黑名单_无法向此发送消息 = 62751,
+        发送消息失败_对方关闭了接收消息 = 10703,
+        对方不是粉丝 = 10700
+    }
+
+    /// <summary>
+    /// 语言
+    /// </summary>
+    public enum Language
+    {
+        /// <summary>
+        /// 中文简体
+        /// </summary>
+        zh_CN,
+        /// <summary>
+        /// 中文繁体
+        /// </summary>
+        zh_TW,
+        /// <summary>
+        /// 英文
+        /// </summary>
+        en
     }
 }

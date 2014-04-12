@@ -70,7 +70,7 @@ namespace Senparc.Weixin.MP.Test
                                                   ToUserName = "olPjZjsXuQPJoV0HlruZkNzKc91E",
                                                   FromUserName = "gh_a96a4a619366",
                                                   CreateTime = DateTimeHelper.GetDateTimeFromXml(63497820384),
-                                                  MsgType = ResponseMsgType.Text,
+                                                  //MsgType = ResponseMsgType.Text,
                                                   Content = "文字信息",
                                                   FuncFlag = false
                                               };
@@ -85,20 +85,20 @@ namespace Senparc.Weixin.MP.Test
                 ResponseMessageNews exceptResult = new ResponseMessageNews()
                                                      {
                                                          //Articles = new List<Article>(),
-                                                         Content = "这里是正文内容，一共将发2条Article。",
                                                          CreateTime = DateTimeHelper.GetDateTimeFromXml(63497821905),
                                                          FromUserName = "gh_a96a4a619366",
                                                          ToUserName = "olPjZjsXuQPJoV0HlruZkNzKc91E",
                                                          FuncFlag = false,
-                                                         MsgType = ResponseMsgType.News
+                                                         //MsgType = ResponseMsgType.News
                                                      };
                 var result = ResponseMessageFactory.GetResponseEntity(xmlNews) as ResponseMessageNews;
                 Assert.AreEqual(exceptResult.ToUserName, result.ToUserName);
                 Assert.AreEqual(exceptResult.CreateTime, result.CreateTime);
-                Assert.AreEqual(exceptResult.Content, result.Content);
                 Assert.AreEqual(2, result.ArticleCount);
                 Assert.AreEqual(result.Articles.Count, result.ArticleCount);
             }
+
+            //TODO：测试语音和视频类型
 
             {
                 //Music
@@ -115,7 +115,7 @@ namespace Senparc.Weixin.MP.Test
                                                             FromUserName = "gh_a96a4a619366",
                                                             ToUserName = "olPjZjsXuQPJoV0HlruZkNzKc91E",
                                                             FuncFlag = false,
-                                                            MsgType = ResponseMsgType.Music
+                                                            //MsgType = ResponseMsgType.Music
                                                         };
                 var result = ResponseMessageFactory.GetResponseEntity(xmlMusic) as ResponseMessageMusic;
                 Assert.AreEqual(exceptResult.ToUserName, result.ToUserName);
