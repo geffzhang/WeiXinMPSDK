@@ -21,6 +21,7 @@ using Senparc.Weixin.MP.Sample.CommonService.WorkMessageHandlers;
 using Senparc.Weixin.Work.Entities;
 using Senparc.Weixin.MP.Sample.CommonService.Utilities;
 using Senparc.Weixin.HttpUtility;
+using Senparc.CO2NET.HttpUtility;
 
 namespace Senparc.Weixin.MP.CoreSample.Controllers
 {
@@ -115,7 +116,7 @@ namespace Senparc.Weixin.MP.CoreSample.Controllers
                     tw.WriteLine(ex.StackTrace);
                     //tw.WriteLine("InnerExecptionMessage:" + ex.InnerException.Message);
 
-                    if (messageHandler.FinalResponseDocument != null)
+                    if (messageHandler.FinalResponseDocument != null && messageHandler.FinalResponseDocument.Root != null)
                     {
                         tw.WriteLine(messageHandler.FinalResponseDocument.ToString());
                     }
